@@ -21,7 +21,8 @@ import java.beans.PropertyDescriptor;
 import java.sql.ResultSetMetaData;
 import java.sql.SQLException;
 import java.util.Arrays;
-
+import org.checkerframework.checker.index.qual.NonNegative;
+import org.checkerframework.checker.index.qual.IndexOrLow;
 
 /**
  * Provides generous name matching (e.g. underscore-aware) from DB
@@ -39,11 +40,13 @@ public class GenerousBeanProcessor extends BeanProcessor {
     }
 
     @Override
-    protected int[] mapColumnsToProperties(final ResultSetMetaData rsmd,
+    protected @IndexOrLow("#2") int[] mapColumnsToProperties(final ResultSetMetaData rsmd,
             final PropertyDescriptor[] props) throws SQLException {
 
-        final int cols = rsmd.getColumnCount();
-        final int[] columnToProperty = new int[cols + 1];
+	/*java.sql.ResultSetMetaData should return NonNegative as it returns the number of columns in a result. Created a pull request for this annotation: https://github.com/typetools/jdk11u/pull/1*/
+        @SuppressWarnings("index")
+	final @NonNegative int cols = rsmd.getColumnCount();
+        final @IndexOrLow("props") int[] columnToProperty = new int[cols + 1];
         Arrays.fill(columnToProperty, PROPERTY_NOT_FOUND);
 
         for (int col = 1; col <= cols; col++) {
