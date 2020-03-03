@@ -34,7 +34,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
-
+import org.checkerframework.checker.index.qual.NonNegative;
+import org.checkerframework.checker.index.qual.IndexOrLow;
+import org.checkerframework.checker.index.qual.IndexOrHigh;
 /**
  * <p>
  * {@code BeanProcessor} matches column names to bean property names
@@ -198,7 +200,7 @@ public class BeanProcessor {
 
         final PropertyDescriptor[] props = this.propertyDescriptors(type);
         final ResultSetMetaData rsmd = rs.getMetaData();
-        final int[] columnToProperty = this.mapColumnsToProperties(rsmd, props);
+        final @IndexOrLow("props") int[] columnToProperty = this.mapColumnsToProperties(rsmd, props);
 
         do {
             results.add(this.createBean(rs, type, props, columnToProperty));
@@ -218,7 +220,7 @@ public class BeanProcessor {
      * @throws SQLException if a database error occurs.
      */
     private <T> T createBean(final ResultSet rs, final Class<T> type,
-                             final PropertyDescriptor[] props, final int[] columnToProperty)
+                             final PropertyDescriptor[] props, final @IndexOrLow("#3") int[] columnToProperty)
     throws SQLException {
 
         final T bean = this.newInstance(type);
@@ -236,7 +238,7 @@ public class BeanProcessor {
     public <T> T populateBean(final ResultSet rs, final T bean) throws SQLException {
         final PropertyDescriptor[] props = this.propertyDescriptors(bean.getClass());
         final ResultSetMetaData rsmd = rs.getMetaData();
-        final int[] columnToProperty = this.mapColumnsToProperties(rsmd, props);
+        final @IndexOrLow("props") int[] columnToProperty = this.mapColumnsToProperties(rsmd, props);
 
         return populateBean(rs, bean, props, columnToProperty);
     }
@@ -253,7 +255,7 @@ public class BeanProcessor {
      * @throws SQLException if a database error occurs.
      */
     private <T> T populateBean(final ResultSet rs, final T bean,
-            final PropertyDescriptor[] props, final int[] columnToProperty)
+            final PropertyDescriptor[] props, final @IndexOrLow("#3") int[] columnToProperty)
             throws SQLException {
 
         for (int i = 1; i < columnToProperty.length; i++) {
@@ -293,12 +295,13 @@ public class BeanProcessor {
 
         final Method setter = getWriteMethod(target, prop, value);
 
-        if (setter == null || setter.getParameterTypes().length != 1) {
+        if (setter == null || setter.getParameterTypes().length != 1) { //#1
             return;
         }
 
         try {
-            final Class<?> firstParam = setter.getParameterTypes()[0];
+	    @SuppressWarnings("array.access.unsafe.high.constant")
+            final Class<?> firstParam = setter.getParameterTypes()[0];//For this statement the above if in #1 checks the length of the array is 1 or not
             for (final PropertyHandler handler : propertyHandlers) {
                 if (handler.match(firstParam, value)) {
                     value = handler.apply(firstParam, value);
@@ -454,11 +457,12 @@ public class BeanProcessor {
      * @return An int[] with column index to property index mappings.  The 0th
      * element is meaningless because JDBC column indexing starts at 1.
      */
-    protected int[] mapColumnsToProperties(final ResultSetMetaData rsmd,
+    protected @IndexOrLow("#2") int[] mapColumnsToProperties(final ResultSetMetaData rsmd,
             final PropertyDescriptor[] props) throws SQLException {
 
-        final int cols = rsmd.getColumnCount();
-        final int[] columnToProperty = new int[cols + 1];
+        @SuppressWarnings("assignment.type.incompatible")
+	final @NonNegative int cols = rsmd.getColumnCount(); /*java.sql.ResultSetMetaData should return NonNegative as it returns the number of columns in a result. Created a pull request for this annotation: https://github.com/typetools/jdk11u/pull/1*/
+        final @IndexOrLow("props") int[] columnToProperty = new int[cols + 1];
         Arrays.fill(columnToProperty, PROPERTY_NOT_FOUND);
 
         for (int col = 1; col <= cols; col++) {

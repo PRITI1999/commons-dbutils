@@ -24,6 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import org.checkerframework.checker.index.qual.NonNegative;
 
 /**
  * Basic implementation of the {@code RowProcessor} interface.
@@ -47,7 +48,7 @@ public class BasicRowProcessor implements RowProcessor {
      */
     private static final BasicRowProcessor instance = new BasicRowProcessor();
 
-    protected static Map<String, Object> createCaseInsensitiveHashMap(final int cols) {
+    protected static Map<String, Object> createCaseInsensitiveHashMap(final @NonNegative int cols) {
         return new CaseInsensitiveHashMap(cols);
     }
 
@@ -101,7 +102,8 @@ public class BasicRowProcessor implements RowProcessor {
     @Override
     public Object[] toArray(final ResultSet rs) throws SQLException {
         final ResultSetMetaData meta = rs.getMetaData();
-        final int cols = meta.getColumnCount();
+	@SuppressWarnings("assignment.type.incompatible")
+        final @NonNegative int cols = meta.getColumnCount(); /*java.sql.ResultSetMetaData should return NonNegative as it returns the number of columns in a result. Created a pull request for this annotation: https://github.com/typetools/jdk11u/pull/1*/
         final Object[] result = new Object[cols];
 
         for (int i = 0; i < cols; i++) {
@@ -162,7 +164,8 @@ public class BasicRowProcessor implements RowProcessor {
     @Override
     public Map<String, Object> toMap(final ResultSet rs) throws SQLException {
         final ResultSetMetaData rsmd = rs.getMetaData();
-        final int cols = rsmd.getColumnCount();
+	@SuppressWarnings("assignment.type.incompatible")
+        final @NonNegative int cols = rsmd.getColumnCount(); /*java.sql.ResultSetMetaData should return NonNegative as it returns the number of columns in a result. Created a pull request for this annotation: https://github.com/typetools/jdk11u/pull/1*/
         final Map<String, Object> result = createCaseInsensitiveHashMap(cols);
 
         for (int i = 1; i <= cols; i++) {
@@ -194,7 +197,7 @@ public class BasicRowProcessor implements RowProcessor {
      */
     private static final class CaseInsensitiveHashMap extends LinkedHashMap<String, Object> {
 
-        private CaseInsensitiveHashMap(final int initialCapacity) {
+        private CaseInsensitiveHashMap(final @NonNegative int initialCapacity) {
             super(initialCapacity);
         }
 
