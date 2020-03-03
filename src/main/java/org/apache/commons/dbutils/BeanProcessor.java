@@ -35,11 +35,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import org.checkerframework.checker.index.qual.NonNegative;
-import org.checkerframework.checker.index.qual.GTENegativeOne;
 import org.checkerframework.checker.index.qual.IndexOrLow;
 import org.checkerframework.checker.index.qual.IndexOrHigh;
-import org.checkerframework.checker.index.qual.LTLengthOf;
-import org.checkerframework.common.value.qual.MinLen;
 /**
  * <p>
  * {@code BeanProcessor} matches column names to bean property names
@@ -298,15 +295,13 @@ public class BeanProcessor {
 
         final Method setter = getWriteMethod(target, prop, value);
 
-        if (setter == null || setter.getParameterTypes().length != 1) {
+        if (setter == null || setter.getParameterTypes().length != 1) { //#1
             return;
         }
 
         try {
-	    /*The above if condition already checks if the returned array
-	     * has a length 1 or not*/
-	    @SuppressWarnings("index")
-            final Class<?> firstParam = setter.getParameterTypes()[0];
+	    @SuppressWarnings("array.access.unsafe.high.constant")
+            final Class<?> firstParam = setter.getParameterTypes()[0];//For this statement the above if in #1 checks the length of the array is 1 or not
             for (final PropertyHandler handler : propertyHandlers) {
                 if (handler.match(firstParam, value)) {
                     value = handler.apply(firstParam, value);
@@ -465,9 +460,8 @@ public class BeanProcessor {
     protected @IndexOrLow("#2") int[] mapColumnsToProperties(final ResultSetMetaData rsmd,
             final PropertyDescriptor[] props) throws SQLException {
 
-	/*java.sql.ResultSetMetaData should return NonNegative as it returns the number of columns in a result. Created a pull request for this annotation: https://github.com/typetools/jdk11u/pull/1*/
-        @SuppressWarnings("index")
-	final @NonNegative int cols = rsmd.getColumnCount();
+        @SuppressWarnings("assignment.type.incompatible")
+	final @NonNegative int cols = rsmd.getColumnCount(); /*java.sql.ResultSetMetaData should return NonNegative as it returns the number of columns in a result. Created a pull request for this annotation: https://github.com/typetools/jdk11u/pull/1*/
         final @IndexOrLow("props") int[] columnToProperty = new int[cols + 1];
         Arrays.fill(columnToProperty, PROPERTY_NOT_FOUND);
 
@@ -480,7 +474,7 @@ public class BeanProcessor {
             if (propertyName == null) {
                 propertyName = columnName;
             }
-            for (@NonNegative int i = 0; i < props.length; i++) {
+            for (int i = 0; i < props.length; i++) {
 
                 PropertyDescriptor prop = props[i];
                 Column column = prop.getReadMethod().getAnnotation(Column.class);

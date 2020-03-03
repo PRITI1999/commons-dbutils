@@ -43,9 +43,8 @@ public class GenerousBeanProcessor extends BeanProcessor {
     protected @IndexOrLow("#2") int[] mapColumnsToProperties(final ResultSetMetaData rsmd,
             final PropertyDescriptor[] props) throws SQLException {
 
-	/*java.sql.ResultSetMetaData should return NonNegative as it returns the number of columns in a result. Created a pull request for this annotation: https://github.com/typetools/jdk11u/pull/1*/
-        @SuppressWarnings("index")
-	final @NonNegative int cols = rsmd.getColumnCount();
+        @SuppressWarnings("assignment.type.incompatible")
+	final @NonNegative int cols = rsmd.getColumnCount(); /*java.sql.ResultSetMetaData should return NonNegative as it returns the number of columns in a result. Created a pull request for this annotation: https://github.com/typetools/jdk11u/pull/1*/
         final @IndexOrLow("props") int[] columnToProperty = new int[cols + 1];
         Arrays.fill(columnToProperty, PROPERTY_NOT_FOUND);
 

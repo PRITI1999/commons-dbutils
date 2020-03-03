@@ -24,7 +24,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import org.checkerframework.checker.index.qual.*;
+import org.checkerframework.checker.index.qual.NonNegative;
 
 /**
  * Basic implementation of the {@code RowProcessor} interface.
@@ -102,9 +102,8 @@ public class BasicRowProcessor implements RowProcessor {
     @Override
     public Object[] toArray(final ResultSet rs) throws SQLException {
         final ResultSetMetaData meta = rs.getMetaData();
-	/*java.sql.ResultSetMetaData should return NonNegative as it returns the number of columns in a result. Created a pull request for this annotation: https://github.com/typetools/jdk11u/pull/1*/
-	@SuppressWarnings("index")
-        final @NonNegative int cols = meta.getColumnCount();
+	@SuppressWarnings("assignment.type.incompatible")
+        final @NonNegative int cols = meta.getColumnCount(); /*java.sql.ResultSetMetaData should return NonNegative as it returns the number of columns in a result. Created a pull request for this annotation: https://github.com/typetools/jdk11u/pull/1*/
         final Object[] result = new Object[cols];
 
         for (int i = 0; i < cols; i++) {
@@ -165,9 +164,8 @@ public class BasicRowProcessor implements RowProcessor {
     @Override
     public Map<String, Object> toMap(final ResultSet rs) throws SQLException {
         final ResultSetMetaData rsmd = rs.getMetaData();
-	/*java.sql.ResultSetMetaData should return NonNegative as it returns the number of columns in a result. Created a pull request for this annotation: https://github.com/typetools/jdk11u/pull/1*/
-	@SuppressWarnings("index")
-        final @NonNegative int cols = rsmd.getColumnCount();
+	@SuppressWarnings("assignment.type.incompatible")
+        final @NonNegative int cols = rsmd.getColumnCount(); /*java.sql.ResultSetMetaData should return NonNegative as it returns the number of columns in a result. Created a pull request for this annotation: https://github.com/typetools/jdk11u/pull/1*/
         final Map<String, Object> result = createCaseInsensitiveHashMap(cols);
 
         for (int i = 1; i <= cols; i++) {
